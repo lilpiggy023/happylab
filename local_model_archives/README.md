@@ -1,6 +1,6 @@
 # Local Model Archive
 
-This folder stores the local model bundle split into GitHub-friendly chunks.
+The local model bundle is split into 8MB chunks for GitHub upload.
 
 ## Restore on Windows PowerShell
 
