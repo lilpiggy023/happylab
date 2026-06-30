@@ -1,0 +1,28 @@
+﻿# Runtime caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local environment
+.env
+.venv/
+venv/
+
+# Uploaded media and generated analysis outputs
+data/assets/
+data/series/
+data/backups/
+
+# Keep the tag library in Git, but not generated bulky assets
+!data/tag_library.json
+
+# Local binary dependencies and installers
+local_dependencies/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+*.bak
