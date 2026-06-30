@@ -1,0 +1,536 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>素材打标台</title>
+  <link rel="stylesheet" href="/static/styles.css?v=series-edit-v17-4">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">M</div>
+      <div>
+        <h1>素材打标台</h1>
+        <p>拉片、自动打标、人工确认、入库</p>
+      </div>
+    </div>
+    <nav>
+      <button class="nav active" data-view="upload">素材库</button>
+      <button class="nav" data-view="series">剧集库</button>
+      <button class="nav" data-view="tagging">自动打标</button>
+      <button class="nav" data-view="library">标签库</button>
+      <button class="nav" data-view="prompts">Prompt</button>
+    </nav>
+    <div class="sidebarBottom">
+      <div class="modelBox">
+        <label class="field">
+          <span>模型 Key</span>
+          <input id="aiApiKey" type="password" autocomplete="off" placeholder="输入 PocketCity Key">
+        </label>
+        <p>https://ai.pocketcity.com<br>gemini-3.1-pro-preview</p>
+      </div>
+      <div class="languageBox">
+        <button id="languageToggle" class="languageToggle" type="button" aria-haspopup="true" aria-expanded="false">
+          <span class="languageIcon">Language</span>
+          <strong id="currentLanguageLabel">中文</strong>
+        </button>
+        <div id="languageMenu" class="languageMenu" hidden>
+          <button type="button" data-locale="zh">中文</button>
+          <button type="button" data-locale="en">English</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <section id="series" class="view">
+      <div class="libraryShell">
+        <div class="topline assetTopline">
+          <div>
+            <p class="eyebrow">剧集库</p>
+            <h2>短剧剧集管理</h2>
+            <p>上传多集短剧，供智能剪辑跨集分析使用，不会沉淀到素材库。</p>
+          </div>
+          <div class="assetActions"><button class="primary" id="openSeriesUploadBtn" type="button" data-requires-model-key="1">上传剧集单集并分析</button></div>
+        </div>
+        <div id="seriesGrid" class="seriesGrid"></div>
+        <div id="seriesStatus" class="status"></div>
+      </div>
+      <div id="seriesUploadModal" class="modal" hidden>
+        <div class="modalPanel">
+          <div class="modalHead"><div><h3>上传剧集单集</h3><p>填写剧名和集数，系统会解析抽帧、转写字幕并生成 AI 拉片报告。</p></div><button class="iconBtn" id="closeSeriesUploadBtn" type="button">x</button></div>
+          <form id="seriesUploadForm">
+            <label class="field"><span>剧名</span><input name="seriesTitle" id="seriesTitleInput" required placeholder="例如：十五年心链"></label>
+            <label class="field"><span>集数</span><input name="episodeNo" id="episodeNoInput" type="number" min="1" step="1" placeholder="例如：1"></label>
+            <label class="dropzone" id="seriesDropzone"><input type="file" name="video" accept="video/*" required><strong>选择或拖入单集视频</strong><small>上传后进入剧集库，不进入素材库</small></label>
+            <button class="primary" type="submit" data-requires-model-key="1">开始分析单集</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="seriesDetail" class="view">
+      <div class="topline editingTopline seriesDetailTopline">
+        <div>
+          <p class="eyebrow">剧集库 / 智能剪辑</p>
+          <h2 id="seriesDetailTitle">剧集详情</h2>
+          <p id="seriesDetailSubtitle">单集、故事线、剪辑清单和导出产物会长期保留在这部剧下。</p>
+        </div>
+        <button class="secondary" id="backToSeriesBtn" type="button">返回剧集库</button>
+      </div>
+
+      <div class="editingWorkspace seriesDetailWorkspace">
+        <div class="panel editingAssetPanel">
+          <div class="panelHead compactHead"><div><h3>单集</h3><p>按集数顺序展示已上传并分析的剧集素材。</p></div></div>
+          <div id="seriesDetailEpisodes" class="seriesDetailEpisodes emptyState">请选择剧集</div>
+        </div>
+        <div class="panel editingStoryPanel">
+          <div class="panelHead compactHead seriesStoryHead">
+            <div><h3>已确认故事线</h3><p>生成后会永久保留在当前剧集下。</p></div>
+            <div class="seriesStoryActions">
+              <label class="miniField"><span>分析前 N 集</span><input id="seriesDetailEpisodeLimit" type="number" min="1" max="200" value="3"></label>
+              <button class="primary" id="seriesDetailGenerateStorylinesBtn" type="button" data-requires-model-key="1">生成投流故事线</button>
+            </div>
+          </div>
+          <div id="seriesDetailStorylines" class="storylineList emptyState">还没有故事线</div>
+        </div>
+        <div class="panel editingCutPanel">
+          <div class="panelHead compactHead">
+            <div><h3>剪辑清单与导出</h3><p>剪辑清单、预览视频和剪映草稿包会自动保存。</p></div>
+            <button class="secondary" id="seriesDetailGenerateCutlistBtn" type="button" data-requires-model-key="1">生成剪辑清单</button>
+          </div>
+          <div id="seriesDetailCutlistPanel" class="cutlistPanel emptyState">请选择故事线</div>
+          <label class="field jianyingTemplateField"><span>&#21098;&#26144;&#26679;&#20363;&#33609;&#31295;&#30446;&#24405;</span><input id="seriesDetailTemplatePath" value="C:\Users\xieyiming\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft\showcase_for_codex"></label>
+          <label class="field jianyingTemplateField"><span>&#21098;&#26144;&#33609;&#31295;&#24211;&#30446;&#24405;</span><input id="seriesDetailDraftRootPath" value="C:\Users\xieyiming\AppData\Local\JianyingPro\User Data\Projects\com.lveditor.draft"></label>
+          <div class="editingExportActions"><button class="secondary" id="seriesDetailRenderPreviewBtn" type="button">渲染预览视频</button><button class="primary" id="seriesDetailExportJianyingBtn" type="button">导出剪映草稿包</button></div>
+          <div id="seriesDetailOutputs" class="editingOutputs"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="upload" class="view active">
+      <div class="libraryShell">
+        <div class="topline assetTopline">
+          <div>
+            <p class="eyebrow">素材库</p>
+            <h2>统一素材沉淀</h2>
+          </div>
+          <div class="assetActions assetLibraryActions">
+            <label class="assetSearchBox nameSearchBox" title="按素材名搜索">
+              <span>素材名</span>
+              <input id="assetNameSearchInput" type="search" placeholder="输入素材名">
+            </label>
+            <div class="assetTagFilter" id="assetTagFilter">
+              <label class="assetSearchBox tagSearchBox" title="输入关键词，或打开下拉按层级选择标签">
+                <span>标签</span>
+                <input id="assetTagSearchInput" type="search" placeholder="输入或选择标签" autocomplete="off">
+              </label>
+              <button class="tagFilterToggle" id="assetTagDropdownBtn" type="button" title="按层级选择标签">⌄</button>
+              <div class="assetTagDropdown" id="assetTagDropdown" hidden></div>
+            </div>
+            <button class="secondary clearAssetFiltersBtn" id="clearAssetFiltersBtn" type="button">清空</button>
+            <span id="assetCount" class="countText">0 条</span>
+            <button class="primary" id="openUploadBtn" type="button" data-requires-model-key="1">上传素材并分析</button>
+          </div>
+        </div>
+        <div id="taskQueue" class="taskQueue" hidden></div>
+        <div id="assetGrid" class="assetGrid"></div>
+        <div id="uploadStatus" class="status"></div>
+      </div>
+
+      <div id="uploadModal" class="modal" hidden>
+        <div class="modalPanel">
+          <div class="modalHead">
+            <div>
+              <h3>上传素材并分析</h3>
+              <p>点击开始后自动执行解析抽帧拆音频、转写并翻译字幕、AI 拉片和自动打标。</p>
+            </div>
+            <button class="iconBtn" id="closeUploadBtn" type="button" title="关闭">×</button>
+          </div>
+          <form id="uploadForm">
+
+            <label class="dropzone" id="dropzone">
+              <input type="file" name="video" accept="video/*" required>
+              <strong>选择或拖入视频</strong>
+              <small>支持 mp4 / mov / mkv 等常见格式</small>
+            </label>
+            <button class="primary" type="submit" data-requires-model-key="1">开始拉片</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="tagging" class="view">
+      <div class="topline">
+        <div>
+          <h2>根据拉片信息自动打标</h2>
+          <p>可选择本机报告路径，或上传 .md 拉片报告；填写 Key 后会使用模型进行 AI 打标。</p>
+        </div>
+      </div>
+
+      <div class="grid two taggingGrid">
+        <div class="taggingLeftStack">
+          <div class="panel selectedAssetPanel">
+            <div class="panelHead compactHead">
+              <div>
+                <h3>当前素材</h3>
+                <p id="selectedAssetHint">选择素材后展示缩略图和拉片产物。</p>
+              </div>
+            </div>
+            <div id="selectedAssetPreview" class="selectedAssetPreview emptyState compact">未绑定素材</div>
+            <div id="selectedAssetArtifacts" class="selectedAssetArtifacts"></div>
+          </div>
+
+          <div class="panel">
+            <label class="field">
+              <span>绑定素材</span>
+              <select id="assetSelect"></select>
+            </label>
+            <input id="reportPath" type="hidden">
+            <input id="reportFile" class="hiddenFileInput" type="file" accept=".md,text/markdown,text/plain">
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panelHead taggingPreviewHead">
+            <div>
+              <h3>标签预览</h3>
+              <p id="summary">等待拉片信息</p>
+            </div>
+            <div class="taggingPreviewActions">
+              <button class="primary" id="autoTagBtn" data-requires-model-key="1">自动打标</button>
+              <button id="confirmBtn" class="secondary">确认入库</button>
+            </div>
+          </div>
+          <div id="tagEditor" class="tagEditor"></div>
+          <label class="field">
+            <span>人工备注</span>
+            <textarea id="note" rows="3" placeholder="记录投放观察、修改建议或审核注意点"></textarea>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section id="library" class="view">
+      <div class="topline">
+        <div>
+          <h2>标签库</h2>
+          <p>维护一级、二级标签，并查看人工确认入库后的标签记录。</p>
+        </div>
+      </div>
+
+      <div class="panel libraryTools">
+        <div class="panelHead">
+          <div>
+            <h3>标签体系维护</h3>
+            <p>新增标签和定义会同步到自动打标页，并提供给 AI 打标模型。</p>
+          </div>
+        </div>
+        <div class="libraryForms">
+          <label class="field">
+            <span>新增一级标签</span>
+            <div class="inputRow">
+              <input id="newCategoryName" placeholder="例如：叙事节奏">
+              <button class="primary" id="addCategoryBtn" type="button">添加一级</button>
+            </div>
+          </label>
+          <label class="field">
+            <span>新增子标签</span>
+            <div class="inputRow twoCols tagCreateRow">
+              <select id="tagCategory"></select>
+              <select id="newTagLevel"></select>
+              <input id="newTagName" placeholder="例如：前3秒强反转">
+              <input id="newTagDefinition" placeholder="标签定义，例如：前3秒出现足够明确的剧情反转或身份落差">
+              <button class="primary" id="addLibraryTagBtn" type="button">添加子标签</button>
+            </div>
+          </label>
+        </div>
+        <p id="schemaStatus" class="formStatus"></p>
+        <div id="tagSystemList" class="tagSystemList"></div>
+
+        <div class="graveyardBlock">
+          <div class="panelHead compactHead">
+            <div>
+              <h3>标签墓地</h3>
+              <p>已删除的一级、二级标签会保留在这里，AI 自动打标会参考并避免复用。</p>
+            </div>
+            <div class="graveyardHeadActions">
+              <span id="tagGraveyardCount" class="mutedCount">0 条</span>
+              <button id="toggleGraveyardBtn" class="graveyardToggle" type="button" aria-expanded="true">收起</button>
+            </div>
+          </div>
+          <div id="tagGraveyardList" class="tagGraveyardList"></div>
+        </div>
+      </div>
+
+      <div class="panelHead libraryRecordHead">
+        <div>
+          <h3>已入库素材标签</h3>
+          <p>人工确认入库后的素材记录会展示在这里。</p>
+        </div>
+      </div>
+      <div id="libraryList" class="library"></div>
+    </section>
+
+    <section id="prompts" class="view">
+      <div class="topline">
+        <div>
+          <h2>Skill / Prompt 配置</h2>
+          <p>查看或修改 AI 拉片与 AI 打标使用的模型提示词。</p>
+        </div>
+        <div class="assetActions">
+          <button class="secondary" id="resetPromptsBtn" type="button">恢复默认</button>
+          <button class="primary" id="savePromptsBtn" type="button">保存配置</button>
+        </div>
+      </div>
+
+      <div class="panel promptMeta">
+        <div><span>Skill</span><strong id="promptSkillName">Video AI Analysis Skill V1</strong></div>
+        <div><span>模型</span><strong id="promptModelName">gemini-3.1-pro-preview</strong></div>
+        <div><span>接口</span><strong id="promptEndpoint">https://ai.pocketcity.com/v1/chat/completions</strong></div>
+      </div>
+
+      <div class="grid promptGrid">
+        <div class="panel">
+          <div class="panelHead">
+            <div>
+              <h3>AI 拉片 Prompt</h3>
+              <p>用于生成正式双语 Markdown 拉片报告。可用占位符：{context_json}</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>系统角色</span>
+            <textarea id="reportSystemPrompt" rows="4"></textarea>
+          </label>
+          <label class="field">
+            <span>用户 Prompt</span>
+            <textarea id="reportUserPrompt" rows="14"></textarea>
+          </label>
+        </div>
+
+        <div class="panel">
+          <div class="panelHead">
+            <div>
+              <h3>AI 打标 Prompt</h3>
+              <p>用于根据拉片报告输出标签 JSON。可用占位符：{schema_json}、{report_text}</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>系统角色</span>
+            <textarea id="tagSystemPrompt" rows="4"></textarea>
+          </label>
+          <label class="field">
+            <span>用户 Prompt</span>
+            <textarea id="tagUserPrompt" rows="14"></textarea>
+          </label>
+        </div>
+
+        <div class="panel">
+          <div class="panelHead">
+            <div>
+              <h3>投流故事线 Prompt</h3>
+              <p>用于生成剧集投流故事线。可用占位符：{source_context}</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>系统角色</span>
+            <textarea id="storylineSystemPrompt" rows="4"></textarea>
+          </label>
+          <label class="field">
+            <span>用户 Prompt</span>
+            <textarea id="storylineUserPrompt" rows="14"></textarea>
+          </label>
+        </div>
+
+        <div class="panel">
+          <div class="panelHead">
+            <div>
+              <h3>剪辑清单 Prompt</h3>
+              <p>用于生成可执行时间线。可用占位符：{selected_storyline}、{source_context}</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>系统角色</span>
+            <textarea id="cutlistSystemPrompt" rows="4"></textarea>
+          </label>
+          <label class="field">
+            <span>用户 Prompt</span>
+            <textarea id="cutlistUserPrompt" rows="14"></textarea>
+          </label>
+        </div>
+
+        <div class="panel">
+          <div class="panelHead">
+            <div>
+              <h3>音频转写 Prompt</h3>
+              <p>用于大模型音频转写。</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>系统角色</span>
+            <textarea id="transcribeSystemPrompt" rows="4"></textarea>
+          </label>
+          <label class="field">
+            <span>用户 Prompt</span>
+            <textarea id="transcribeUserPrompt" rows="14"></textarea>
+          </label>
+        </div>
+
+        <div class="panel">
+          <div class="panelHead">
+            <div>
+              <h3>字幕翻译 Prompt</h3>
+              <p>用于非中文字幕翻译。可用占位符：{transcript_payload}</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>系统角色</span>
+            <textarea id="translateSystemPrompt" rows="4"></textarea>
+          </label>
+          <label class="field">
+            <span>用户 Prompt</span>
+            <textarea id="translateUserPrompt" rows="14"></textarea>
+          </label>
+        </div>
+
+        <div class="panel">
+          <div class="panelHead">
+            <div>
+              <h3>JSON 修复 Prompt</h3>
+              <p>用于修复模型返回的转写 JSON。可用占位符：{raw_response}</p>
+            </div>
+          </div>
+          <label class="field">
+            <span>系统角色</span>
+            <textarea id="transcriptRepairSystemPrompt" rows="4"></textarea>
+          </label>
+          <label class="field">
+            <span>用户 Prompt</span>
+            <textarea id="transcriptRepairUserPrompt" rows="14"></textarea>
+          </label>
+        </div>
+      </div>
+      <p id="promptStatus" class="formStatus"></p>
+    </section>
+  </main>
+
+  <template id="categoryTemplate">
+    <div class="category">
+      <div class="categoryTitle">
+        <h4></h4>
+        <button class="iconBtn addTag" title="添加标签">+</button>
+      </div>
+      <div class="chips"></div>
+    </div>
+  </template>
+
+
+  <div id="framePreviewModal" class="framePreviewOverlay" hidden>
+    <div class="framePreviewCard" role="dialog" aria-label="抽帧预览">
+      <button class="framePreviewClose" id="closeFramePreviewBtn" type="button" title="关闭">×</button>
+      <img id="framePreviewImage" alt="抽帧预览">
+      <div id="framePreviewCaption" class="framePreviewCaption"></div>
+    </div>
+  </div>
+  <div id="transcribeModal" class="modal" hidden>
+    <div class="modalPanel smallModal">
+      <div class="modalHead">
+        <div>
+          <h3>音频转写</h3>
+          <p>选择转写方式和语种。本地 ASR 不需要模型 Key。</p>
+        </div>
+        <button class="iconBtn" id="closeTranscribeBtn" type="button" title="关闭">×</button>
+      </div>
+      <label class="field">
+        <span>转录方式</span>
+        <select id="transcribeMethod">
+          <option value="local">本地 ASR</option>
+          <option value="model">大模型</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>转录语种</span>
+        <select id="transcribeLanguage">
+          <option value="auto">自动识别</option>
+          <option value="zh">中文</option>
+          <option value="en">英语</option>
+          <option value="id">印尼语</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>本地模型目录 / 模型名</span>
+        <input id="localAsrModel" placeholder="例如 small，或 C:/models/faster-whisper-small">
+      </label>
+      <p class="formStatus" id="transcribeModalHint">本地 ASR 使用 faster-whisper；如未下载模型，请填写本机模型目录。</p>
+      <div class="modalActions">
+        <button class="secondary" id="cancelTranscribeBtn" type="button">取消</button>
+        <button class="primary" id="startTranscribeBtn" type="button" data-requires-model-key="conditional">开始转写</button>
+      </div>
+    </div>
+  </div>
+  <div id="previewTagModal" class="modal" hidden>
+    <div class="modalPanel previewTagModalPanel">
+      <div class="modalHead">
+        <div>
+          <h3 id="previewTagModalTitle">编辑预览标签</h3>
+          <p id="previewTagModalMeta">修改只影响当前素材，确认入库后写入标签库。</p>
+        </div>
+        <button class="iconBtn" id="closePreviewTagBtn" type="button" title="关闭">×</button>
+      </div>
+      <div id="previewTagRows" class="previewTagRows"></div>
+      <div class="modalActions">
+        <button class="secondary" id="cancelPreviewTagBtn" type="button">取消</button>
+        <button class="primary" id="savePreviewTagBtn" type="button">保存修改</button>
+      </div>
+    </div>
+  </div>
+  <div id="definitionModal" class="modal" hidden>
+    <div class="modalPanel smallModal">
+      <div class="modalHead">
+        <div>
+          <h3 id="definitionModalTitle">编辑标签定义</h3>
+          <p id="definitionModalMeta"></p>
+        </div>
+        <button class="iconBtn" id="closeDefinitionBtn" type="button" title="关闭">×</button>
+      </div>
+      <label class="field">
+        <span>标签名称</span>
+        <input id="definitionModalName" placeholder="标签名称">
+      </label>
+      <label class="field">
+        <span>标签定义</span>
+        <textarea id="definitionModalText" rows="5" placeholder="填写这个标签的判定标准、适用场景或边界"></textarea>
+      </label>
+      <div class="mergeTagPanel" id="mergeTagPanel" hidden>
+        <label class="field compactField">
+          <span>合并到</span>
+          <select id="mergeTagTarget"></select>
+        </label>
+        <button class="primary" id="confirmMergeTagBtn" type="button">确认合并</button>
+      </div>
+      <div class="mergeTagPanel transferTagPanel" id="transferTagPanel" hidden>
+        <label class="field compactField">
+          <span>目标一级</span>
+          <select id="transferTagCategory"></select>
+        </label>
+        <label class="field compactField">
+          <span>目标层级</span>
+          <select id="transferTagLevel"></select>
+        </label>
+        <button class="primary" id="confirmTransferTagBtn" type="button">确认转移</button>
+      </div>
+      <div class="modalActions">
+        <div class="modalActionLeft">
+          <button class="secondary" id="mergeDefinitionTagBtn" type="button">合并</button>
+          <button class="secondary" id="transferDefinitionTagBtn" type="button">转移</button>
+          <button class="danger" id="deleteDefinitionTagBtn" type="button">删除</button>
+        </div>
+        <button class="primary" id="saveDefinitionModalBtn" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+  <script src="/static/app.js?v=series-edit-v17-4"></script>
+</body>
+</html>
+
