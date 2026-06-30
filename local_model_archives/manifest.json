@@ -1,0 +1,70 @@
+{
+  "archive": "material_tagging_local_models.zip",
+  "archive_size": 490270586,
+  "archive_sha256": "ef6e4b5fe12ac2241c0f44ab33efabbf4c8d873eaed404552dd6153d6eeeb54f",
+  "part_size": 47185920,
+  "part_count": 11,
+  "included": [
+    "models\\faster-whisper-small",
+    "vosk-model-small-en-us-0.15",
+    "local_dependencies"
+  ],
+  "parts": [
+    {
+      "name": "material_tagging_local_models.zip.part001",
+      "size": 47185920,
+      "sha256": "1a7508fa0aa1583ce6f2bd13b140e3a2cb60e8ed4e4406ce1421159b3f40e917"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part002",
+      "size": 47185920,
+      "sha256": "449b05d32666a58f6f0c0c6e7b1d71ac09a3fd4d35ec3f0f9e7855da0d41b474"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part003",
+      "size": 47185920,
+      "sha256": "8bb3b9288976bb37cf7ff764cba56434044b797b266db04527b693b5d81c1f49"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part004",
+      "size": 47185920,
+      "sha256": "456981513b84d95b8fbc7fb73f68c6235089467d9c09e5431ef40ce272a6764c"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part005",
+      "size": 47185920,
+      "sha256": "c4a94759fc953d68840bdc65abac2000263668c6548999587948671456484ef4"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part006",
+      "size": 47185920,
+      "sha256": "1737b33848f824bf1da42ebe240b508440d355f3a62a97a7511eb12c11bea5a9"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part007",
+      "size": 47185920,
+      "sha256": "c543f9f0f3530755f9073ac5de87e206b3f6b119ed354c8d24945cd0ce78e57a"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part008",
+      "size": 47185920,
+      "sha256": "3f11190aa72ab4f769b9c144568009eac0649f887ade881792ad8615ece98212"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part009",
+      "size": 47185920,
+      "sha256": "a28002e77ae9d864e16d7ee2b20354d7a924fcea2c0a3446f816e5eec93c891f"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part010",
+      "size": 47185920,
+      "sha256": "d8037da8c5c8c58bbcd20551f00b523f9c7c095d42048e5dac906c89e213d415"
+    },
+    {
+      "name": "material_tagging_local_models.zip.part011",
+      "size": 18411386,
+      "sha256": "c025bb6f42b526c86de9536a0686a35da174f841f65d0463a11a18c55910212a"
+    }
+  ],
+  "restore_windows_powershell": "Get-Content material_tagging_local_models.zip.part* -Encoding Byte -ReadCount 0 | Set-Content material_tagging_local_models.zip -Encoding Byte"
+}
